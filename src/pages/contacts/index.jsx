@@ -12,6 +12,7 @@ import {
   MenuItem,
   Switch,
 } from "@mui/material";
+import constants from "../../assets/constants.d";
 import Loading from "../../components/loading/Loading";
 import { TrashColor, Edit } from "../../components/svg/Svg";
 import { DataGrid, GridToolbar, esES } from "@mui/x-data-grid";
@@ -21,27 +22,35 @@ import { useTheme } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { alpha } from "@mui/material";
 import useUsuariosData from "../../hooks/useUsuarioData";
-import useRolesData from "../../hooks/useRolData";
+import { useJwt } from "../../context/JWTContext";
 import userolesData from "../../hooks/useRolData";
+import useDecodedJwt from "../../hooks/useJwt";
 const Usuarios = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const {
-    handleSubmit: handleSaveInsumo,
-    watch: watchSaveInsumo,
-    formState: { errors: errorsAddInsumo },
-    register: registerInsumo,
+    handleSubmit: handleSaveUsuario,
+    formState: { errors: errorsAddUsuario },
+    register: registerUsuario,
   } = useForm();
   const [openModal, setOpenModal] = useState(false);
+  const { token } = useJwt();
+  const payload = useDecodedJwt(token);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedInsumo, setSelectedInsumo] = useState(null);
-  const [insumoToDelete, setInsumoToDelete] = useState(null);
+  const [selectedUsuario, setselectedUsuario] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [openErrorModal, setOpenErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState([]);
   const [roles, setRoles] = useState([]);
-  const { fetchAllUsuarios, initialFetchAllUsuarios, loading } =
-    useUsuariosData();
+  const {
+    fetchAllUsuarios,
+    initialFetchAllUsuarios,
+    loading,
+    createUsuario,
+    updateUsuario,
+    deleteUsuario,
+  } = useUsuariosData();
   const { initialFetchAllroles, loading: loadingRoles } = userolesData();
   useEffect(() => {
     const initialFetchUsuarios = async () => {
@@ -60,16 +69,16 @@ const Usuarios = () => {
 
   /// Métodos para CRUD
   const handleEdit = (id) => {
-    const insumoToEdit = data.find((insumo) => insumo.id === id);
-    setSelectedInsumo(insumoToEdit);
+    const userToEdit = data.find((user) => user.id === id);
+    setselectedUsuario(userToEdit);
     setOpenModal(true);
   };
 
-  const handleStateInsumo = async (e, id) => {
+  const handleStateUsuarios = async (e, id) => {
     const isActive = e.target.checked ? 1 : 2;
-    const response = await updateInsumos(id, { estadoId: isActive });
+    const response = await updateUsuario(id, { estadoId: isActive });
     if (response.status === 200 || response.status === 201) {
-      const updatedData = await fetchAllInsumos();
+      const updatedData = await fetchAllUsuarios();
 
       if (updatedData.status === 200 && updatedData.data) {
         setData(updatedData.data);
@@ -82,10 +91,13 @@ const Usuarios = () => {
   };
 
   const handleAdd = () => {
-    setSelectedInsumo({
+    setselectedUsuario({
       nombre: "",
-      cantidad: "",
-      categoriaId: 0,
+      email: "",
+      telefono: "",
+      direccion: "",
+      password: "",
+      rolId: 1,
       estadoId: 0,
     });
     setOpenModal(true);
@@ -93,15 +105,21 @@ const Usuarios = () => {
 
   const handleClose = () => {
     setOpenModal(false);
-    setSelectedInsumo(null);
+    setselectedUsuario(null);
   };
 
   const handleSave = async (data) => {
-    const response = selectedInsumo.id
-      ? await updateInsumos(selectedInsumo.id, data)
-      : await createInsumo({ ...data, estadoId: 1 });
+    const { direccion, password, ...dataValid } = data;
+    const finalData = {
+      ...dataValid,
+      ...(direccion !== "" && { direccion }),
+      ...(password !== "" && { password }),
+    };
+    const response = selectedUsuario.id
+      ? await updateUsuario(selectedUsuario.id, finalData)
+      : await createUsuario({ ...finalData, estadoId: 1 });
     if (response.status === 200 || response.status === 201) {
-      const updatedData = await fetchAllInsumos();
+      const updatedData = await fetchAllUsuarios();
       if (updatedData.status === 200 && updatedData.data) {
         setData(updatedData.data);
       }
@@ -112,33 +130,33 @@ const Usuarios = () => {
   };
 
   const handleDelete = (id) => {
-    const insumo = data.find((insumo) => insumo.id === id);
-    setInsumoToDelete(insumo);
+    const user = data.find((user) => user.id === id);
+    setUserToDelete(user);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
-    if (insumoToDelete.estadoId === 1) {
-      setErrorMessage("No se puede eliminar el insumo porque está activo.");
+    if (userToDelete.estadoId === 1) {
+      setErrorMessage("No se puede eliminar el usuario porque está activo.");
       setOpenErrorModal(true);
       setOpenDeleteDialog(false);
       return;
     }
 
-    const response = await deleteInsumo(insumoToDelete.id);
+    const response = await deleteUsuario(userToDelete.id);
 
     if (response.status === 200 || response.status === 201) {
       setData((prevData) =>
-        prevData.filter((insumo) => insumo.id !== insumoToDelete.id)
+        prevData.filter((user) => user.id !== userToDelete.id)
       );
       setOpenDeleteDialog(false);
-      setInsumoToDelete(null);
+      setUserToDelete(null);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setSelectedInsumo((prev) => ({ ...prev, [name]: value }));
+    setselectedUsuario((prev) => ({ ...prev, [name]: value }));
   };
   // Fin métodos CRUD
   const columns = [
@@ -180,7 +198,7 @@ const Usuarios = () => {
           }}
           color="warning"
           onChange={(e) => {
-            handleStateInsumo(e, row.id);
+            handleStateUsuarios(e, row.id);
           }}
           defaultChecked={row.estadoId == 1}
         />
@@ -190,16 +208,21 @@ const Usuarios = () => {
       field: "acciones",
       headerName: "Acciones",
       flex: 1,
-      renderCell: ({ row }) => (
-        <Box>
-          <Button onClick={() => handleEdit(row.id)}>
-            <Edit size={20} color={colors.grey[100]} />
-          </Button>
-          <Button onClick={() => handleDelete(row.id)} sx={{ ml: 1 }}>
-            <TrashColor size={20} color={colors.grey[100]} />
-          </Button>
-        </Box>
-      ),
+      renderCell: ({ row }) =>
+        row.email === payload?.email ? (
+          <Box sx={{ textAlign: "center", mx: "auto" }}>
+            <h4>Sin acciones</h4>
+          </Box>
+        ) : (
+          <Box>
+            <Button onClick={() => handleEdit(row.id)}>
+              <Edit size={20} color={colors.grey[100]} />
+            </Button>
+            <Button onClick={() => handleDelete(row.id)} sx={{ ml: 1 }}>
+              <TrashColor size={20} color={colors.grey[100]} />
+            </Button>
+          </Box>
+        ),
     },
   ];
 
@@ -224,7 +247,7 @@ const Usuarios = () => {
       <Box
         m="0px 20px"
         p="0px 10px"
-        height="56%"
+        height="50%"
         width="98%"
         sx={{
           "& .MuiDataGrid-root": { border: "none" },
@@ -268,9 +291,9 @@ const Usuarios = () => {
       </Box>
 
       <Dialog open={openModal} onClose={handleClose}>
-        <form onSubmit={handleSaveInsumo(handleSave)}>
+        <form onSubmit={handleSaveUsuario(handleSave)}>
           <DialogTitle color={colors.grey[100]}>
-            {selectedInsumo?.id ? "Editar Insumo" : "Agregar Insumo"}
+            {selectedUsuario?.id ? "Editar Usuario" : "Agregar Usuario"}
           </DialogTitle>
           <DialogContent>
             <TextField
@@ -295,18 +318,33 @@ const Usuarios = () => {
                 },
               }}
               variant="outlined"
-              {...registerInsumo("nombre", {
-                required: "El insumo necesita un nombre.",
+              {...registerUsuario("nombre", {
+                required: "El usuario necesita un nombre.",
+                minLength: {
+                  message: "Mínimo requerido 4 caracteres",
+                  value: 4,
+                },
+                maxLength: {
+                  message: "Máximo permitido 25 caracteres",
+                  value: 25,
+                },
+                validate: {
+                  noNumbers: (value) =>
+                    /^[^0-9]+$/.test(value) || "No se permiten números",
+                  noSpecials: (value) =>
+                    /^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s]+$/.test(value) ||
+                    "No se permiten caracteres especiales",
+                },
               })}
-              value={selectedInsumo?.nombre || ""}
+              value={selectedUsuario?.nombre || ""}
               onChange={handleInputChange}
               FormHelperTextProps={{ sx: { color: "red" } }}
-              helperText={errorsAddInsumo?.nombre?.message}
+              helperText={errorsAddUsuario?.nombre?.message}
             />
             <TextField
               margin="dense"
-              name="cantidad"
-              label="Cantidad"
+              name="email"
+              label="Correo"
               sx={{
                 "& .MuiOutlinedInput-root": {
                   "&:hover fieldset": {
@@ -322,30 +360,147 @@ const Usuarios = () => {
                   },
                 },
               }}
-              type="number"
+              type="text"
               fullWidth
               variant="outlined"
-              {...registerInsumo("cantidad", {
-                required: "La cantidad es requerida",
+              {...registerUsuario("email", {
+                required: "Debes ingresar un correo",
                 pattern: {
-                  value: /^[0-9]+$/, // Expresión regular para números
-                  message: "Solo se permiten números",
-                },
-                validate: (value) => {
-                  if (value <= 0)
-                    return "Debes ingresar una cantidad mayor a cero!";
-                  return true;
+                  value: constants.EMAIL_REGEX, // Expresión regular para números
+                  message: "Ingresa un correo electrónico válido",
                 },
               })}
-              value={selectedInsumo?.cantidad || ""}
+              value={selectedUsuario?.email || ""}
               onChange={handleInputChange}
               FormHelperTextProps={{ sx: { color: "red" } }}
-              helperText={errorsAddInsumo?.cantidad?.message}
+              helperText={errorsAddUsuario?.email?.message}
             />
             <TextField
               margin="dense"
-              name="categoriaId"
-              label="Categoría"
+              name="telefono"
+              label="Teléfono"
+              type="text"
+              fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "purple",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "purple",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  "&.Mui-focused": {
+                    color: "purple",
+                  },
+                },
+              }}
+              variant="outlined"
+              {...registerUsuario("telefono", {
+                required: "El teléfono no puede estar vacío.",
+                minLength: {
+                  message: "Ingresa un número colombiano valido (+57)",
+                  value: 10,
+                },
+                maxLength: {
+                  message: "Ingresa un número colombiano valido (+57)",
+                  value: 10,
+                },
+                validate: {
+                  isColombianNumber: (value) =>
+                    constants.PHONE_REGEX.test(value) ||
+                    "Ingresa un número colombiano valido (+57)",
+                },
+              })}
+              value={selectedUsuario?.telefono || ""}
+              onChange={handleInputChange}
+              FormHelperTextProps={{ sx: { color: "red" } }}
+              helperText={errorsAddUsuario?.telefono?.message}
+            />
+            {!selectedUsuario?.id && (
+              <TextField
+                margin="dense"
+                name="password"
+                label="Contraseña"
+                type="password"
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "purple",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "purple",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    "&.Mui-focused": {
+                      color: "purple",
+                    },
+                  },
+                }}
+                variant="outlined"
+                {...registerUsuario("password", {
+                  required: "La contraseña es obligatoria.",
+                  minLength: {
+                    message: "Mínimo requerido 8 caracteres",
+                    value: 4,
+                  },
+                  maxLength: {
+                    message: "Máximo permitido 30 caracteres",
+                    value: 30,
+                  },
+                })}
+                value={selectedUsuario?.password || ""}
+                onChange={handleInputChange}
+                FormHelperTextProps={{ sx: { color: "red" } }}
+                helperText={errorsAddUsuario?.password?.message}
+              />
+            )}
+            <TextField
+              margin="dense"
+              name="direccion"
+              label="Dirección"
+              type="text"
+              fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "purple",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "purple",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  "&.Mui-focused": {
+                    color: "purple",
+                  },
+                },
+              }}
+              variant="outlined"
+              {...registerUsuario("direccion", {
+                minLength: {
+                  message:
+                    "Mínimo 10 caracteres, ¡especifica más la dirección! (ej: Carrera 67a #37-103)",
+                  value: 10,
+                },
+                maxLength: {
+                  message: "Máximo permitido 50 caracteres",
+                  value: 50,
+                },
+              })}
+              value={selectedUsuario?.direccion || ""}
+              onChange={handleInputChange}
+              FormHelperTextProps={{ sx: { color: "red" } }}
+              helperText={errorsAddUsuario?.direccion?.message}
+            />
+
+            <TextField
+              margin="dense"
+              name="rol"
+              label="Rol"
               fullWidth
               select
               sx={{
@@ -364,13 +519,13 @@ const Usuarios = () => {
                 },
               }}
               variant="outlined"
-              {...registerInsumo("categoriaId", {
-                required: "Debes escoger una categoría!",
+              {...registerUsuario("roleId", {
+                required: "Debes escoger un rol!",
               })}
-              value={parseInt(selectedInsumo?.categoriaId) || 1}
+              value={parseInt(selectedUsuario?.roleId) || 1}
               onChange={handleInputChange}
               FormHelperTextProps={{ sx: { color: "red" } }}
-              helperText={errorsAddInsumo?.categoriaId?.message}
+              helperText={errorsAddUsuario?.categoriaId?.message}
             >
               {roles.map((rol) => (
                 <MenuItem key={rol.id} value={rol.id}>
@@ -399,8 +554,8 @@ const Usuarios = () => {
         </DialogTitle>
         <DialogContent>
           <Typography>
-            ¿Estás seguro de que deseas eliminar el insumo "
-            {insumoToDelete?.nombre}"?
+            ¿Estás seguro de que deseas eliminar el Usuario "
+            {userToDelete?.nombre}"?
           </Typography>
         </DialogContent>
         <DialogActions>

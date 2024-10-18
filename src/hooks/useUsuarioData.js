@@ -27,7 +27,7 @@ export default function useUsuariosData() {
   };
   const updateUsuario = async (id, infoUpdate) => {
     const respuesta = await updateFetch(
-      `https://modisteria-back-production.up.railway.app/api/insumos/updateInsumo/${id}`,
+      `https://modisteria-back-production.up.railway.app/api/usuarios/updateUser/${id}`,
       "PUT",
       infoUpdate,
       { "x-token": token }
@@ -36,7 +36,7 @@ export default function useUsuariosData() {
   };
   const createUsuario = async (infoUpdate) => {
     const respuesta = await createFetch(
-      `https://modisteria-back-production.up.railway.app/api/insumos/createInsumo`,
+      `https://modisteria-back-production.up.railway.app/api/usuarios/createUsuario`,
       "POST",
       infoUpdate,
       { "x-token": token }
@@ -45,7 +45,7 @@ export default function useUsuariosData() {
   };
   const deleteUsuario = async (id) => {
     const respuesta = await deleteFetch(
-      `https://modisteria-back-production.up.railway.app/api/insumos/deleteInsumo/${id}`,
+      `https://modisteria-back-production.up.railway.app/api/usuarios/deleteUser/${id}`,
       "DELETE",
       null,
       { "x-token": token }
@@ -56,9 +56,9 @@ export default function useUsuariosData() {
   return {
     initialFetchAllUsuarios,
     fetchAllUsuarios,
-    // deleteInsumo,
-    // createInsumo,
-    // updateInsumos,
+    deleteUsuario,
+    createUsuario,
+    updateUsuario,
     loading,
   };
 }

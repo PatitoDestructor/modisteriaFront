@@ -8,10 +8,9 @@ import { useJwt } from "../../context/JWTContext";
 import useDecodedJwt from "../../hooks/useJwt";
 export default function LayoutDashboard() {
   const { token } = useJwt();
-  console.log(token);
   const payload = useDecodedJwt(token);
   const navigete = useNavigate();
-  console.log(payload);
+
   useEffect(() => {
     (!token || payload?.role.id !== 2) && navigete("/");
   }, []);

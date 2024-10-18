@@ -178,7 +178,6 @@ export default function Venta() {
       toast.error(`${response.data.error}`, {
         autoClose: 2000,
       });
-      console.log(response);
     }
   };
   return (
