@@ -6,6 +6,7 @@ import Header from "../../components/Header/Header";
 import { useTheme } from "@mui/material";
 import useFetch from "../../hooks/useFetch";
 import { useJwt } from "../../context/JWTContext";
+import { Plus, Trash } from "../../components/svg/Svg";
 
 const CitaDashboard = () => {
     const theme = useTheme();
@@ -223,6 +224,41 @@ const CitaDashboard = () => {
                                 value={selectedCita?.tiempo || ""}
                                 onChange={handleInputChange}
                             />
+                            
+                            <span>Agregar insumos requeridos</span>
+                            <div className="add-insumo">
+                                
+                                <div className="insumo-button">
+                                    <button className="cart-button2">
+                                        <Plus color="#fff" size={"27"}></Plus>
+                                    </button>
+                                </div>
+
+                                <div className="insumo-select">
+                                    <div className="iSelect-head">
+                                        <label htmlFor="">Insumo #1</label>
+                                        <span><Trash color="#fff" size={"20"}></Trash></span>
+                                    </div>
+
+                                    <TextField
+                                        margin="dense"
+                                        name="estadoId"
+                                        label="Insumo"
+                                        select
+                                        fullWidth
+                                        variant="outlined"
+                                    >
+                                        <MenuItem value={9}>Tela 1</MenuItem>
+                                        <MenuItem value={10}>Tela 2</MenuItem>
+                                        <MenuItem value={11}>Tela 3</MenuItem>
+                                    </TextField>
+
+                                    {/*CANTIDAD*/}
+                                    <input type="number" className="cantidad-insumo" min={1}/>
+
+                                </div>
+
+                            </div>
                         </>
                     )}
                 </DialogContent>

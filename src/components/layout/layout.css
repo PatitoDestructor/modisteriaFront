@@ -74,7 +74,58 @@ a img {
   transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
+.cart-button2 {
+  margin-top: 10px;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.add-insumo{
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+.insumo-select{
+  margin-right: 70px;
+  padding: 10px;
+  text-align: center;
+  width: 200px;
+  border: 1px solid white;
+}
+
+.iSelect-head{
+  display: flex;
+  justify-content: space-between;
+}
+.iSelect-head label{
+  margin-left: 35%;
+}
+.iSelect-head span{
+  cursor: pointer;
+}
+.iSelect-head span :hover{
+  color: red;
+}
+
+.cantidad-insumo{
+  width: 40px;
+  margin-left: 10px;
+}
+.name-insumo{
+  width: 90px;
+}
+
 .cart-button:hover {
+  background-color: #9f06ff;
+  transform: scale(1.1);
+}
+
+.cart-button2:hover {
   background-color: #9f06ff;
   transform: scale(1.1);
 }
